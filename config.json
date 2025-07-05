@@ -1,0 +1,30 @@
+{
+  "jellyfin": {
+    "server_url": "http://localhost:8096",
+    "server_path": "D:\\scoop\\apps\\jellyfin",
+    "service_name": "JellyfinServer"
+  },
+  "potplayer": {
+    "executable_path": "D:\\scoop\\apps\\potplayer\\current\\PotPlayerMini64.exe",
+    "reg_file": "PotPlayerMini64.reg"
+  },
+  "browser": {
+    "executable_path": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "process_name": "msedge.exe",
+    "type": "Chrome"
+  },
+  "paths": {
+    "script_directory": "d:\\1VSCODE\\Projects\\LazyCommand\\JellyPot",
+    "powershell_script": "d:\\1VSCODE\\Projects\\LazyCommand\\JellyPot\\potplayer.ps1"
+  },
+  "userscripts": {
+    "potplayer_script": "OpenWithPotplayerUserscript.js",
+    "media_info_script": "OpenMediaInfoPathScriptmonkey.js"
+  },
+  "optional_features": {
+    "auto_start_stop_server": true,
+    "local_filesystem_links": false,
+    "fullscreen_mode": false,
+    "auto_fullscreen": false
+  }
+}
