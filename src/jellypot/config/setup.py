@@ -430,6 +430,69 @@ Write-Host "标准化路径: $path"
         else:
             print(f"❌ 注册表文件不存在: {reg_file}")
     
+    def update_registry_file(self):
+        """更新注册表文件中的路径"""
+        print("📝 更新注册表文件路径...")
+        
+        reg_file = self.script_dir / self.config['potplayer']['reg_file']
+        
+        if reg_file.exists():
+            with open(reg_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # 替换所有可能的旧路径为新路径
+            old_paths = [
+                "C:\\\\ProgramData\\\\PotPlayerJellyfin\\\\potplayer.ps1",
+                "C:\\ProgramData\\PotPlayerJellyfin\\potplayer.ps1"
+            ]
+            
+            new_path = str(self.script_dir / "potplayer.ps1").replace("\\", "\\\\")
+            
+            for old_path in old_paths:
+                content = content.replace(old_path, new_path)
+            
+            with open(reg_file, 'w', encoding='utf-8') as f:
+                f.write(content)
+            
+            print(f"✅ 已更新注册表文件: {reg_file}")
+        else:
+            print(f"❌ 注册表文件不存在: {reg_file}")
+    
+    def update_registry_file(self):
+        """自动批量替换注册表文件中的 PowerShell 路径和参数为无窗口方案二"""
+        print("📝 自动批量替换注册表文件命令行参数...")
+        reg_file = self.script_dir / self.config['potplayer']['reg_file']
+        if reg_file.exists():
+            with open(reg_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+            # 统一替换为方案二命令
+            ps1_path = str(self.script_dir / "potplayer.ps1").replace("\\", "\\\\")
+            new_cmd = f'@="powershell -NoProfile -WindowStyle Hidden -File {ps1_path} %1"'
+            import re
+            content = re.sub(r'@="[^"]*powershell[^"]*%1"', new_cmd, content)
+            with open(reg_file, 'w', encoding='utf-8') as f:
+                f.write(content)
+            print(f"✅ 注册表命令已批量替换为无窗口方案: {reg_file}")
+        else:
+            print(f"❌ 注册表文件不存在: {reg_file}")
+
+    def batch_update_ps1_path_in_files(self, file_list):
+        """批量替换其它文件中的 potplayer.ps1 路径（如用户脚本、批处理等）"""
+        ps1_path = str(self.script_dir / "potplayer.ps1").replace("\\", "/")
+        for file in file_list:
+            file_path = self.script_dir / file
+            if file_path.exists():
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                # 替换所有旧路径为新路径
+                import re
+                content = re.sub(r'potplayer\.ps1[^"]*', f'potplayer.ps1', content)
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(content)
+                print(f"✅ 已批量替换: {file_path}")
+            else:
+                print(f"❌ 文件不存在: {file_path}")
+    
     def create_shortcuts(self):
         """创建快捷方式"""
         print("🔗 创建快捷方式...")
@@ -531,7 +594,13 @@ Write-Host "标准化路径: $path"
         self.update_powershell_script()
         self.update_userscripts()
         self.update_task_scheduler_xml()
-        self.update_task_scheduler_xml()
+        self.update_registry_file()
+        # 自动批量替换其它相关文件中的 ps1 路径
+        self.batch_update_ps1_path_in_files([
+            self.config['userscripts']['potplayer_script'],
+            self.config['userscripts']['media_info_script'],
+            "Jellyfin.bat"
+        ])
         
         # 应用注册表设置
         if input("应用 PotPlayer 注册表设置? (y/n) [默认: y]: ").lower() != 'n':

@@ -1,7 +1,104 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "jellypot"
 version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
-requires-python = ">=3.11"
+description = "Jellyfin + PotPlayer 整合配置工具"
+readme = "README_CN.md"
+requires-python = ">=3.8"
+authors = [
+    {name = "JellyPot Team", email = "team@jellypot.com"}
+]
+license = {text = "MIT"}
+keywords = ["jellyfin", "potplayer", "media", "integration"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Video :: Display",
+    "Topic :: System :: Systems Administration",
+]
 dependencies = []
+
+[project.optional-dependencies]
+build = ["pyinstaller>=5.0"]
+dev = ["pytest>=7.0", "black>=22.0", "isort>=5.0", "mypy>=1.0"]
+all = ["jellypot[build,dev]"]
+
+[project.scripts]
+jellypot = "jellypot.__main__:main"
+jellypot-launcher = "jellypot.launcher:main"
+jellypot-config = "jellypot.configurator:main"
+jellypot-run = "jellypot.runner:main"
+jellypot-build = "jellypot.build:main"
+
+[project.urls]
+Homepage = "https://github.com/Damocles-fr/PPJF"
+Repository = "https://github.com/Damocles-fr/PPJF.git"
+Issues = "https://github.com/Damocles-fr/PPJF/issues"
+Documentation = "https://github.com/Damocles-fr/PPJF/blob/main/README_CN.md"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["jellypot*"]
+
+[tool.setuptools.package-data]
+jellypot = ["*.txt", "*.md", "*.json"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+# UV 配置
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0",
+    "black>=22.0", 
+    "isort>=5.0",
+    "mypy>=1.0",
+    "pyinstaller>=5.0"
+]
+
+[tool.uv.sources]

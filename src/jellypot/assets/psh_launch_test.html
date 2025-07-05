@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>PowerShell 启动方案测试</title>
+  <style>
+    body { font-family: Consolas, monospace; background: #f8f8f8; padding: 2em; }
+    h2 { color: #2a5caa; }
+    pre { background: #eee; padding: 1em; border-radius: 6px; }
+    .ok { color: green; }
+    .warn { color: orange; }
+    .fail { color: red; }
+  </style>
+</head>
+<body>
+  <h1>PowerShell 启动三种方案模拟</h1>
+  <h2>方案一：wt.exe 无头启动</h2>
+  <pre>
+wt.exe -w 0 nt -p "Windows PowerShell" powershell -NoProfile -WindowStyle Hidden -File "d:\\1VSCODE\\Projects\\LazyCommand\\JellyPot\\potplayer.ps1" %1
+  </pre>
+  <div class="warn">需要 Windows Terminal (wt.exe) 已安装，Win10 1903+ 支持。</div>
+
+  <h2>方案二：PowerShell 原生隐藏窗口</h2>
+  <pre>
+powershell -NoProfile -WindowStyle Hidden -File "d:\\1VSCODE\\Projects\\LazyCommand\\JellyPot\\potplayer.ps1" %1
+  </pre>
+  <div class="ok">兼容性最好，推荐！</div>
+
+  <h2>方案三：cmd /c start 隐藏窗口</h2>
+  <pre>
+cmd /c start "" /min powershell -NoProfile -File "d:\\1VSCODE\\Projects\\LazyCommand\\JellyPot\\potplayer.ps1" %1
+  </pre>
+  <div class="warn">窗口会闪一下，适合批处理场景。</div>
+
+  <h2>模拟调用按钮（仅演示，不会真的执行）</h2>
+  <button onclick="alert('模拟 wt.exe 无头启动命令')">方案一模拟</button>
+  <button onclick="alert('模拟 PowerShell 隐藏窗口命令')">方案二模拟</button>
+  <button onclick="alert('模拟 cmd /c start 隐藏窗口命令')">方案三模拟</button>
+  <p style="color:#888;">（本页面仅做命令展示和交互演示，实际调用需在本地注册表或批处理中配置）</p>
+</body>
+</html>
