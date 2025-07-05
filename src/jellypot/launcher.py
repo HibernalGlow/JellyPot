@@ -66,13 +66,13 @@ class PotPlayerLauncher:
         path = path.replace("//", "\\")
         
         # 修正磁盘驱动器路径
-        path = re.sub(r"^([A-Z]):\\\\", r"\1:\\", path, flags=re.IGNORECASE)
-        path = re.sub(r"^([A-Z])/", r"\1:\\", path, flags=re.IGNORECASE)
-        path = re.sub(r"^([A-Z]):", r"\1:\\", path, flags=re.IGNORECASE)
+        path = re.sub(r"^([A-Z]):\\\\", r"\1:\\", path)
+        path = re.sub(r"^([A-Z])/", r"\1:\\", path)
+        path = re.sub(r"^([A-Z]):", r"\1:\\", path)
         
         # 替换特定的 \\?\\ 路径格式
-        path = re.sub(r"([A-Z]):\\\\\\\\\\?\\\\", r"\1:\\", path, flags=re.IGNORECASE)
-        path = re.sub(r"\\\\\\\\\\?\\\\", "\\\\", path)
+        path = re.sub(r"([A-Z]):\\\\\\\\\\?\\\\", r"\1:\\", path)
+        path = re.sub(r"\\\\\\\\\\?\\\\", "\\", path)
         
         # 将所有剩余的斜杠规范化为反斜杠
         path = path.replace("/", "\\")

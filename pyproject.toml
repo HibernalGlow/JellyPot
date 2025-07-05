@@ -101,4 +101,5 @@ dev-dependencies = [
     "pyinstaller>=5.0"
 ]
 
-[tool.uv.sources]
+[tool.uv.scripts]
+build = "pyinstaller --onefile --windowed --name=potplayer_launcher --distpath=dist --workpath=build --specpath=. --clean src/jellypot/__main__.py"

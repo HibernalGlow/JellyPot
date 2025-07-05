@@ -5,4 +5,4 @@ Windows Registry Editor Version 5.00
 [HKEY_CLASSES_ROOT\potplayer\shell]
 [HKEY_CLASSES_ROOT\potplayer\shell\open]
 [HKEY_CLASSES_ROOT\potplayer\shell\open\command]
-@="powershell -NoProfile -WindowStyle Hidden -File d:\\1VSCODE\\Projects\\LazyCommand\\JellyPot\\potplayer.ps1 %1"
+@="d:\\1VSCODE\\Projects\\LazyCommand\\JellyPot\\dist\\potplayer_launcher.exe %1"

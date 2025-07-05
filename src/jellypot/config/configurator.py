@@ -19,9 +19,14 @@ from ..core.launcher import PotPlayerLauncher
 
 class PPJFConfigurator:
     def __init__(self):
-        # 配置文件应该在项目根目录的 config 文件夹
-        self.script_dir = Path(__file__).parent.parent.parent.absolute()
-        self.config_file = self.script_dir / "config" / "config.json"
+        # 当前包的根目录 (src/jellypot/)
+        self.package_root = Path(__file__).parent.parent.absolute()
+        # 各个子目录
+        self.config_dir = self.package_root / "config"
+        self.scripts_dir = self.package_root / "scripts"
+        self.assets_dir = self.package_root / "assets"
+        
+        self.config_file = self.config_dir / "config.json"
         self.config = self.load_config()
         
     def load_config(self) -> Dict:
@@ -39,7 +44,7 @@ class PPJFConfigurator:
                 },
                 "potplayer": {
                     "executable_path": "C:\\Program Files\\DAUM\\PotPlayer\\PotPlayerMini64.exe",
-                    "reg_file": "config/PotPlayerMini64.reg"
+                    "reg_file": "PotPlayerMini64.reg"
                 },
                 "browser": {
                     "executable_path": "C:\\Program Files\\LibreWolf\\librewolf.exe",
@@ -47,12 +52,12 @@ class PPJFConfigurator:
                     "type": "LibreWolf"
                 },
                 "paths": {
-                    "script_directory": str(self.script_dir),
-                    "powershell_script": str(self.script_dir / "scripts" / "potplayer.ps1")
+                    "script_directory": str(self.scripts_dir),
+                    "powershell_script": str(self.scripts_dir / "potplayer.ps1")
                 },
                 "userscripts": {
-                    "potplayer_script": "scripts/OpenWithPotplayerUserscript.js",
-                    "media_info_script": "scripts/OpenMediaInfoPathScriptmonkey.js"
+                    "potplayer_script": "OpenWithPotplayerUserscript.js",
+                    "media_info_script": "OpenMediaInfoPathScriptmonkey.js"
                 },
                 "optional_features": {
                     "auto_start_stop_server": True,
@@ -160,7 +165,7 @@ class PPJFConfigurator:
         """更新注册表文件，使用 exe 启动器而不是 PowerShell"""
         print("📝 更新注册表文件为 exe 启动器...")
         
-        reg_file = self.script_dir / self.config['potplayer']['reg_file']
+        reg_file = self.config_dir / self.config['potplayer']['reg_file']
         
         content = f"""Windows Registry Editor Version 5.00
 [HKEY_CLASSES_ROOT\\potplayer]
@@ -181,7 +186,7 @@ class PPJFConfigurator:
         """创建批处理启动器"""
         print("📝 创建 Jellyfin 批处理启动器...")
         
-        batch_file = self.script_dir / "Jellyfin.bat"
+        batch_file = self.scripts_dir / "Jellyfin.bat"
         
         batch_content = f"""@echo off
 tasklist /FI "IMAGENAME eq jellyfin.exe" 2>NUL | find /I "jellyfin.exe" >NUL
@@ -218,6 +223,174 @@ exit
             f.write(batch_content)
         
         print(f"✅ 已创建: {batch_file}")
+    
+    def interactive_setup(self):
+        """交互式配置"""
+        print("🛠️  开始交互式配置...")
+        print()
+        
+        detected = self.detect_software_paths()
+        self.show_detected_software(detected)
+        
+        # Jellyfin 配置
+        print("📡 Jellyfin 配置:")
+        self.config['jellyfin']['server_url'] = self.get_user_input(
+            "Jellyfin 服务器 URL", 
+            self.config['jellyfin']['server_url']
+        )
+        
+        if 'jellyfin' in detected:
+            self.config['jellyfin']['server_path'] = detected['jellyfin']
+        else:
+            self.config['jellyfin']['server_path'] = self.get_user_input(
+                "Jellyfin 服务器安装路径",
+                self.config['jellyfin']['server_path']
+            )
+        print()
+        
+        # PotPlayer 配置
+        print("🎥 PotPlayer 配置:")
+        if 'potplayer' in detected:
+            self.config['potplayer']['executable_path'] = detected['potplayer']
+        else:
+            self.config['potplayer']['executable_path'] = self.get_user_input(
+                "PotPlayer 可执行文件路径",
+                self.config['potplayer']['executable_path']
+            )
+        print()
+        
+        # 浏览器配置
+        print("🌐 浏览器配置:")
+        if 'browser' in detected:
+            self.config['browser']['executable_path'] = detected['browser']
+            self.config['browser']['type'] = detected['browser_type']
+            self.config['browser']['process_name'] = detected['browser_process']
+        else:
+            self.config['browser']['executable_path'] = self.get_user_input(
+                "浏览器可执行文件路径",
+                self.config['browser']['executable_path']
+            )
+            self.config['browser']['type'] = self.get_user_input(
+                "浏览器类型 (LibreWolf/Firefox/Chrome)",
+                self.config['browser']['type']
+            )
+            self.config['browser']['process_name'] = Path(
+                self.config['browser']['executable_path']
+            ).name.lower()
+        print()
+        
+        # 可选功能
+        print("🔧 可选功能配置:")
+        self.config['optional_features']['auto_start_stop_server'] = input(
+            "启用自动启动/停止 Jellyfin 服务器? (y/n) [默认: y]: "
+        ).lower() != 'n'
+        
+        self.config['optional_features']['local_filesystem_links'] = input(
+            "启用本地文件夹链接功能? (y/n) [默认: n]: "
+        ).lower() == 'y'
+        
+        self.config['optional_features']['fullscreen_mode'] = input(
+            "启用全屏模式? (y/n) [默认: n]: "
+        ).lower() == 'y'
+        
+        print()
+
+    def validate_paths(self) -> bool:
+        """验证配置的路径是否有效"""
+        print("🔍 验证配置路径...")
+        errors = []
+        
+        # 验证 PotPlayer
+        if not os.path.exists(self.config['potplayer']['executable_path']):
+            errors.append(f"PotPlayer 路径无效: {self.config['potplayer']['executable_path']}")
+        
+        # 验证浏览器
+        if not os.path.exists(self.config['browser']['executable_path']):
+            errors.append(f"浏览器路径无效: {self.config['browser']['executable_path']}")
+        
+        if errors:
+            print("❌ 发现配置错误:")
+            for error in errors:
+                print(f"   {error}")
+            return False
+        
+        print("✅ 所有路径验证通过")
+        return True
+
+    def update_powershell_script(self):
+        """更新 PowerShell 脚本"""
+        print("📝 更新 potplayer.ps1...")
+        
+        ps_file = self.scripts_dir / "potplayer.ps1"
+        
+        ps_content = f"""Add-Type -Assembly System.Web
+
+# 从参数获取路径
+$path = $args[0]
+$path = $path -replace "potplayer://" , ""
+
+# 解码 URL
+$path = $path -replace "\\+", "%2B"
+$path = [System.Web.HttpUtility]::UrlDecode($path)
+
+# 清理斜杠和反斜杠
+$path = $path -replace "///", "\\\\"
+$path = $path -replace "\\\\\\\\", "\\\\"
+$path = $path -replace "\\\\", "\\\\"
+$path = $path -replace "//", "\\\\"
+
+# 修正所有磁盘驱动器路径
+$path = $path -replace "^([A-Z]):\\\\", '$1:\\'
+$path = $path -replace "^([A-Z])/", '$1:\\'
+$path = $path -replace "^([A-Z]):", '$1:\\'
+
+# 替换特定的 \\\\?\\ 路径格式
+$path = $path -replace "([A-Z]):\\\\\\\\\\?\\\\", '$1:\\'
+$path = $path -replace "\\\\\\\\\\?\\\\", "\\\\"
+
+# 将所有剩余的斜杠规范化为反斜杠
+$path = $path -replace "/", "\\\\"
+
+Write-Host "标准化路径: $path"
+# 使用标准化路径启动 PotPlayer
+& "{self.config['potplayer']['executable_path']}" $path
+"""
+        
+        with open(ps_file, 'w', encoding='utf-8') as f:
+            f.write(ps_content)
+        
+        print(f"✅ 已更新: {ps_file}")
+
+    def run(self):
+        """运行配置程序"""
+        self.print_banner()
+        
+        # 交互式设置
+        self.interactive_setup()
+        
+        # 验证路径
+        if not self.validate_paths():
+            print("❌ 路径验证失败，请检查配置后重试")
+            return False
+        
+        # 保存配置
+        self.save_config()
+        
+        # 更新文件
+        print()
+        print("🔄 更新配置文件...")
+        self.create_batch_launcher()
+        self.update_powershell_script()
+        
+        print()
+        print("🎉 配置完成!")
+        print("=" * 60)
+        print("📋 后续步骤:")
+        print("1. 运行 uv run python -m jellypot.core.build 构建 exe")
+        print("2. 导入注册表文件启用 potplayer:// 协议")
+        print("3. 测试配置是否正常工作")
+        
+        return True
 
 
 def main():
